@@ -49,32 +49,56 @@ namespace PowerPointLabs
         private ImageHandlerFactory ImageHandlerFactory { get; set; }
 
         private SupertipHandlerFactory SupertipHandlerFactory { get; set; }
+
+        private ContentHandlerFactory ContentHandlerFactory { get; set; }
+
+        private PressedHandlerFactory PressedHandlerFactory { get; set; }
+
+        private CheckBoxActionHandlerFactory CheckBoxActionHandlerFactory { get; set; }
         #endregion
 
         #region Action Framework entry point
 
         public void OnAction(Office.IRibbonControl control)
         {
-            var actionHandler = ActionHandlerFactory.CreateInstance(control.Id);
+            var actionHandler = ActionHandlerFactory.CreateInstance(control.Id, control.Tag);
             actionHandler.Execute(control.Id);
         }
 
         public string GetLabel(Office.IRibbonControl control)
         {
-            var labelHandler = LabelHandlerFactory.CreateInstance(control.Id);
+            var labelHandler = LabelHandlerFactory.CreateInstance(control.Id, control.Tag);
             return labelHandler.Get(control.Id);
         }
 
         public string GetSupertip(Office.IRibbonControl control)
         {
-            var supertipHandler = SupertipHandlerFactory.CreateInstance(control.Id);
+            var supertipHandler = SupertipHandlerFactory.CreateInstance(control.Id, control.Tag);
             return supertipHandler.Get(control.Id);
         }
 
         public Bitmap GetImage(Office.IRibbonControl control)
         {
-            var imageHandler = ImageHandlerFactory.CreateInstance(control.Id);
+            var imageHandler = ImageHandlerFactory.CreateInstance(control.Id, control.Tag);
             return imageHandler.Get(control.Id);
+        }
+
+        public string GetContent(Office.IRibbonControl control)
+        {
+            var contentHandler = ContentHandlerFactory.CreateInstance(control.Id, control.Tag);
+            return contentHandler.Get(control.Id);
+        }
+
+        public bool GetPressed(Office.IRibbonControl control)
+        {
+            var pressedHandler = PressedHandlerFactory.CreateInstance(control.Id, control.Tag);
+            return pressedHandler.Get(control.Id);
+        }
+
+        public void OnCheckBoxAction(Office.IRibbonControl control, bool pressed)
+        {
+            var checkBoxActionHandler = CheckBoxActionHandlerFactory.CreateInstance(control.Id, control.Tag);
+            checkBoxActionHandler.Execute(control.Id, pressed);
         }
 
         #endregion
@@ -129,6 +153,9 @@ namespace PowerPointLabs
             LabelHandlerFactory = new LabelHandlerFactory();
             SupertipHandlerFactory = new SupertipHandlerFactory();
             ImageHandlerFactory = new ImageHandlerFactory();
+            ContentHandlerFactory = new ContentHandlerFactory();
+            PressedHandlerFactory = new PressedHandlerFactory();
+            CheckBoxActionHandlerFactory = new CheckBoxActionHandlerFactory();
 
             _ribbon = ribbonUi;
 
@@ -283,6 +310,11 @@ namespace PowerPointLabs
             return TextCollection.AddSpotlightButtonSupertip;
         }
 
+        public string GetSpotlightPropertiesButtonSupertip(Office.IRibbonControl control)
+        {
+            return TextCollection.SpotlightPropertiesButtonSupertip;
+        }
+
         public string GetAddAudioButtonSupertip(Office.IRibbonControl control)
         {
             return TextCollection.AddAudioButtonSupertip;
@@ -433,9 +465,9 @@ namespace PowerPointLabs
             return TextCollection.CombineShapesLabel;
         }
 
-        public string GetAutoAnimateGroupLabel(Office.IRibbonControl control)
+        public string GetAnimationLabGroupLabel(Office.IRibbonControl control)
         {
-            return TextCollection.AutoAnimateGroupLabel;
+            return TextCollection.AnimationLabGroupLabel;
         }
         public string GetAddAnimationButtonLabel(Office.IRibbonControl control)
         {
@@ -446,9 +478,9 @@ namespace PowerPointLabs
             return TextCollection.AddAnimationInSlideAnimateButtonLabel;
         }
 
-        public string GetAutoZoomGroupLabel(Office.IRibbonControl control)
+        public string GetZoomLabGroupLabel(Office.IRibbonControl control)
         {
-            return TextCollection.AutoZoomGroupLabel;
+            return TextCollection.ZoomLabGroupLabel;
         }
         public string GetAddZoomInButtonLabel(Office.IRibbonControl control)
         {
@@ -463,18 +495,13 @@ namespace PowerPointLabs
             return TextCollection.ZoomToAreaButtonLabel;
         }
 
-        public string GetAutoCropGroupLabel(Office.IRibbonControl control)
+        public string GetCropLabGroupLabel(Office.IRibbonControl control)
         {
-            return TextCollection.AutoCropGroupLabel;
+            return TextCollection.CropLabGroupLabel;
         }
         public string GetMoveCropShapeButtonLabel(Office.IRibbonControl control)
         {
             return TextCollection.MoveCropShapeButtonLabel;
-        }
-
-        public string GetSpotLightGroupLabel(Office.IRibbonControl control)
-        {
-            return TextCollection.SpotLightGroupLabel;
         }
         public string GetAddSpotlightButtonLabel(Office.IRibbonControl control)
         {
@@ -522,10 +549,13 @@ namespace PowerPointLabs
         {
             return TextCollection.RemoveAllNotesButtonLabel;
         }
-
-        public string GetHighlightBulletsGroupLabel(Office.IRibbonControl control)
+        public string GetSpotlightPropertiesButtonLabel(Office.IRibbonControl control)
         {
-            return TextCollection.HighlightBulletsGroupLabel;
+            return TextCollection.SpotlightPropertiesButtonLabel;
+        }
+        public string GetHighlightLabGroupLabel(Office.IRibbonControl control)
+        {
+            return TextCollection.HighlightLabGroupLabel;
         }
         public string GetHighlightBulletsTextButtonLabel(Office.IRibbonControl control)
         {
@@ -538,8 +568,7 @@ namespace PowerPointLabs
         public string GetHighlightTextFragmentsButtonLabel(Office.IRibbonControl control)
         {
             return TextCollection.HighlightTextFragmentsButtonLabel;
-        }
-        
+        }        
         public string GetLabsGroupLabel(Office.IRibbonControl control)
         {
             return TextCollection.LabsGroupLabel;
@@ -1438,17 +1467,17 @@ namespace PowerPointLabs
             }
         }
 
-        public void AutoAnimateDialogButtonPressed(Office.IRibbonControl control)
+        public void AnimationLabDialogButtonPressed(Office.IRibbonControl control)
         {
             try
             {
-                var dialog = new AutoAnimateDialogBox(DefaultDuration, FrameAnimationChecked);
+                var dialog = new AnimationLabDialogBox(DefaultDuration, FrameAnimationChecked);
                 dialog.SettingsHandler += AnimationPropertiesEdited;
                 dialog.ShowDialog();
             }
             catch (Exception e)
             {
-                Logger.LogException(e, "AutoAnimateDialogButtonPressed");
+                Logger.LogException(e, "AnimationLabDialogButtonPressed");
                 throw;
             }
         }
@@ -1471,17 +1500,17 @@ namespace PowerPointLabs
             }
         }
 
-        public void AutoZoomDialogButtonPressed(Office.IRibbonControl control)
+        public void ZoomLabDialogButtonPressed(Office.IRibbonControl control)
         {
             try
             {
-                var dialog = new AutoZoomDialogBox(BackgroundZoomChecked, MultiSlideZoomChecked);
+                var dialog = new ZoomLabDialogBox(BackgroundZoomChecked, MultiSlideZoomChecked);
                 dialog.SettingsHandler += ZoomPropertiesEdited;
                 dialog.ShowDialog();
             }
             catch (Exception e)
             {
-                Logger.LogException(e, "AutoZoomDialogButtonPressed");
+                Logger.LogException(e, "ZoomLabDialogButtonPressed");
                 throw;
             }
         }
@@ -1703,7 +1732,7 @@ namespace PowerPointLabs
         }
         # endregion
 
-        # region Feature: Auto Narration
+        # region Feature: Narrations Lab
         public void AddAudioClick(Office.IRibbonControl control)
         {
             var currentSlide = PowerPointCurrentPresentationInfo.CurrentSlide;
@@ -1737,23 +1766,23 @@ namespace PowerPointLabs
             PreviewAnimationsIfChecked();
         }
 
-        public void AutoNarrateDialogButtonPressed(Office.IRibbonControl control)
+        public void NarrationsLabDialogButtonPressed(Office.IRibbonControl control)
         {
             try
             {
-                var dialog = new AutoNarrateDialogBox(_voiceSelected, _voiceNames,
+                var dialog = new NarrationsLabDialogBox(_voiceSelected, _voiceNames,
                     _previewCurrentSlide);
-                dialog.SettingsHandler += AutoNarrateSettingsChanged;
+                dialog.SettingsHandler += NarrationsLabSettingsChanged;
                 dialog.ShowDialog();
             }
             catch (Exception e)
             {
-                Logger.LogException(e, "AutoNarrateDialogButtonPressed");
+                Logger.LogException(e, "NarrationsLabDialogButtonPressed");
                 throw;
             }
         }
 
-        public void AutoNarrateSettingsChanged(String voiceName, bool previewCurrentSlide)
+        public void NarrationsLabSettingsChanged(String voiceName, bool previewCurrentSlide)
         {
             _previewCurrentSlide = previewCurrentSlide;
             if (!String.IsNullOrWhiteSpace(voiceName))
@@ -1841,7 +1870,7 @@ namespace PowerPointLabs
         }
         # endregion
 
-        # region Feature: Auto Caption
+        # region Feature: Captions Lab
         public void AddCaptionClick(Office.IRibbonControl control)
         {
             Globals.ThisAddIn.Application.StartNewUndoEntry();
@@ -1985,7 +2014,7 @@ namespace PowerPointLabs
             }
         }
 
-        public void BlurRemainderEffectClick(Office.IRibbonControl control)
+        public void BlurRemainderEffectClick(int percentage)
         {
             Globals.ThisAddIn.Application.StartNewUndoEntry();
 
@@ -1993,7 +2022,7 @@ namespace PowerPointLabs
 
             if (effectSlide == null) return;
 
-            effectSlide.BlurBackground();
+            effectSlide.BlurBackground(percentage, EffectsLab.EffectsLabBlurSelected.IsTintRemainder);
             effectSlide.GetNativeSlide().Select();
         }
 
@@ -2045,7 +2074,7 @@ namespace PowerPointLabs
             effectSlide.GetNativeSlide().Select();
         }
 
-        public void BlurBackgroundEffectClick(Office.IRibbonControl control)
+        public void BlurBackgroundEffectClick(int percentage)
         {
             Globals.ThisAddIn.Application.StartNewUndoEntry();
 
@@ -2053,7 +2082,7 @@ namespace PowerPointLabs
 
             if (effectSlide == null) return;
 
-            effectSlide.BlurBackground();
+            effectSlide.BlurBackground(percentage, EffectsLab.EffectsLabBlurSelected.IsTintBackground);
             effectSlide.GetNativeSlide().Select();
         }
 
